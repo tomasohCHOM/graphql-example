@@ -10,19 +10,23 @@ const {
   GraphQLList,
 } = require("graphql");
 const { createHandler } = require("graphql-http/lib/use/express");
-const { players } = require("./data/players.json");
-const { matches } = require("./data/matches.json");
+const players = require("./data/players.json");
+const matches = require("./data/matches.json");
 
 const app = express();
 
+/**
+ * Player Object Type. Contains playerId, gamer tag, a list of characters, and ranking.
+ */
 const PlayerType = new GraphQLObjectType({
   name: "Player",
   description:
-    "This represents a player's id, gamertag, characters that they play, and unofficial ranking.",
+    "This represents a player's id, gamer tag, characters that they play, and unofficial ranking.",
   fields: () => ({
     id: { type: new GraphQLNonNull(GraphQLInt) },
     gamerTag: { type: new GraphQLNonNull(GraphQLString) },
-    characters: { type: new GraphQLList(GraphQLString) },
+    characters: { type: new GraphQLNonNull(new GraphQLList(GraphQLString)) },
+    rank: { type: GraphQLInt },
     matches: {
       type: MatchType,
       resolve: (player) => {
@@ -32,6 +36,10 @@ const PlayerType = new GraphQLObjectType({
   }),
 });
 
+/**
+ * Match Object Type. Contains the match id, the title, and the id of the player associated to
+ * preexisting players.
+ */
 const MatchType = new GraphQLObjectType({
   name: "Matches",
   description:
@@ -63,14 +71,9 @@ const RootQueryType = new GraphQLObjectType({
         players.find((player) => player.id === args.id),
     },
     players: {
-      type: new GraphQLList(PlayerType),
+      type: new GraphQLList(GraphQLString),
       description: "List of All Players",
       resolve: () => players,
-    },
-    matches: {
-      type: new GraphQLList(MatchType),
-      description: "List of All Matches",
-      resolve: () => matches,
     },
     match: {
       type: MatchType,
@@ -80,11 +83,54 @@ const RootQueryType = new GraphQLObjectType({
       },
       resolve: (parent, args) => matches.find((match) => match.id === args.id),
     },
+    matches: {
+      type: new GraphQLList(MatchType),
+      description: "List of All Matches",
+      resolve: () => matches,
+    },
+  }),
+});
+
+const RootMutationType = new GraphQLObjectType({
+  name: "Mutation",
+  description: "Root Mutation",
+  fields: () => ({
+    addPlayer: {
+      type: PlayerType,
+      description: "Add a player",
+      args: {
+        gamerTag: { type: GraphQLNonNull(GraphQLString) },
+        characters: { type: GraphQLNonNull(GraphQLList(GraphQLInt)) },
+        ranking: { type: GraphQLInt },
+      },
+      resolve: (parent, args) => {
+        const player = {
+          id: players.length + 1,
+          gamerTag: args.name,
+          characters: args.characters,
+          authorId: args.authorId,
+        };
+        players.push(player);
+        return player;
+      },
+    },
+    addMatch: {
+      type: MatchType,
+      description: "Add a match",
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+      },
+      resolve: (parent, args) => {
+        const match = { id: matches.length + 1, name: args.name };
+        matches.push(match);
+        return match;
+      },
+    },
   }),
 });
 
 /**
- * Create a GrahQL Schema with necessary resolvers
+ * [Old Schema]
  */
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -98,6 +144,9 @@ const schema = new GraphQLSchema({
   }),
 });
 
+/**
+ * Create a GraphQL Schema with necessary resolvers
+ */
 const newSchema = new GraphQLSchema({
   query: RootQueryType,
 });
