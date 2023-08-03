@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "gamerTag": "MKLeo",
+    "characters": ["Joker", "Byleth", "Corrin"],
+    "rank": 5
+  },
+  {
+    "id": 2,
+    "gamerTag": "Tweek",
+    "characters": ["Diddy Kong", "Sephiroth", "Wolf"],
+    "rank": 3
+  },
+  {
+    "id": 3,
+    "gamerTag": "Sparg0",
+    "characters": ["Cloud", "Pyra/Mythra"],
+    "rank": 1
+  },
+  {
+    "id": 4,
+    "gamerTag": "Sonix",
+    "characters": ["Sonic"],
+    "rank": 7
+  }
+]
