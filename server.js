@@ -74,19 +74,34 @@ const RootQueryType = new GraphQLObjectType({
         players.find((player) => player.id === args.id),
     },
     players: {
-      type: PlayerType,
+      type: new GraphQLList(PlayerType),
       description: "List of All Players",
       resolve: () => players,
     },
-    match: {
+    oneMatchById: {
       type: MatchType,
       description: "A Single Match",
       args: {
         id: { type: GraphQLInt },
       },
-      resolve: (parent, args) => matches.find((match) => match.id === args.id),
+      resolve: (parent, args) =>
+        matches.find((match) => match.playerId === args.id),
     },
-    matches: {
+    allMatchesById: {
+      type: new GraphQLList(MatchType),
+      description: "All Matches corresponding to a single player",
+      args: {
+        id: { type: GraphQLInt },
+      },
+      resolve: (parent, args) => {
+        const playerMatches = [];
+        matches.forEach((match) => {
+          if (match.playerId === args.id) playerMatches.push(match);
+        });
+        return playerMatches;
+      },
+    },
+    allMatches: {
       type: new GraphQLList(MatchType),
       description: "List of All Matches",
       resolve: () => matches,
@@ -131,7 +146,7 @@ const RootMutationType = new GraphQLObjectType({
       },
       resolve: (parent, args) => {
         const match = {
-          id: matches.length + 1,
+          matchId: matches.length + 1,
           title: args.title,
           playerId: args.playerId,
         };
