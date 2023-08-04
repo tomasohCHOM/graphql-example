@@ -57,6 +57,9 @@ const MatchType = new GraphQLObjectType({
   }),
 });
 
+/**
+ * Main query.
+ */
 const RootQueryType = new GraphQLObjectType({
   name: "Query",
   description: "Root Query",
@@ -71,7 +74,7 @@ const RootQueryType = new GraphQLObjectType({
         players.find((player) => player.id === args.id),
     },
     players: {
-      type: new GraphQLList(GraphQLString),
+      type: PlayerType,
       description: "List of All Players",
       resolve: () => players,
     },
@@ -91,6 +94,9 @@ const RootQueryType = new GraphQLObjectType({
   }),
 });
 
+/**
+ * Main mutation
+ */
 const RootMutationType = new GraphQLObjectType({
   name: "Mutation",
   description: "Root Mutation",
@@ -99,16 +105,18 @@ const RootMutationType = new GraphQLObjectType({
       type: PlayerType,
       description: "Add a player",
       args: {
-        gamerTag: { type: GraphQLNonNull(GraphQLString) },
-        characters: { type: GraphQLNonNull(GraphQLList(GraphQLInt)) },
-        ranking: { type: GraphQLInt },
+        gamerTag: { type: new GraphQLNonNull(GraphQLString) },
+        characters: {
+          type: new GraphQLNonNull(new GraphQLList(GraphQLString)),
+        },
+        rank: { type: GraphQLInt },
       },
       resolve: (parent, args) => {
         const player = {
           id: players.length + 1,
-          gamerTag: args.name,
+          gamerTag: args.gamerTag,
           characters: args.characters,
-          authorId: args.authorId,
+          rank: args.rank,
         };
         players.push(player);
         return player;
@@ -118,10 +126,15 @@ const RootMutationType = new GraphQLObjectType({
       type: MatchType,
       description: "Add a match",
       args: {
-        name: { type: GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        playerId: { type: new GraphQLNonNull(GraphQLInt) },
       },
       resolve: (parent, args) => {
-        const match = { id: matches.length + 1, name: args.name };
+        const match = {
+          id: matches.length + 1,
+          title: args.title,
+          playerId: args.playerId,
+        };
         matches.push(match);
         return match;
       },
@@ -149,6 +162,7 @@ const schema = new GraphQLSchema({
  */
 const newSchema = new GraphQLSchema({
   query: RootQueryType,
+  mutation: RootMutationType,
 });
 
 app.use("/graphql", createHandler({ schema: newSchema }));
